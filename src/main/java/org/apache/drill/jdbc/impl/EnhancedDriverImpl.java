@@ -17,6 +17,9 @@
  */
 package org.apache.drill.jdbc.impl;
 
+import org.apache.calcite.avatica.AvaticaConnection;
+import org.apache.calcite.avatica.Meta;
+
 /**
  * @author Oleg Zinoviev
  * @since 26.06.2017.
@@ -41,5 +44,10 @@ public class EnhancedDriverImpl extends DriverImpl {
     @Override
     protected String getConnectStringPrefix() {
         return PREFIX;
+    }
+
+    @Override
+    public Meta createMeta(AvaticaConnection connection) {
+        return new EnhancedDrillMeta((DrillConnectionImpl)connection);
     }
 }

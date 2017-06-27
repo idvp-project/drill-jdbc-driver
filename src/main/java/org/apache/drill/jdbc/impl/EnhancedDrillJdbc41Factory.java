@@ -49,7 +49,7 @@ public class EnhancedDrillJdbc41Factory extends DrillFactory {
 
     @Override
     DrillConnectionImpl newDrillConnection(DriverImpl driver, DrillFactory drillFactory, String s, Properties properties) throws SQLException {
-        return new DrillConnectionImpl(driver, drillFactory, s, properties);
+        return new EnhancedDrillConnectionImpl(driver, drillFactory, s, properties);
     }
 
     public DrillDatabaseMetaDataImpl newDatabaseMetaData(AvaticaConnection connection) {

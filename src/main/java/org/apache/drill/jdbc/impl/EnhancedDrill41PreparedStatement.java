@@ -19,14 +19,13 @@ package org.apache.drill.jdbc.impl;
 
 import org.apache.calcite.avatica.AvaticaParameter;
 import org.apache.calcite.avatica.Meta;
+import org.apache.calcite.avatica.remote.TypedValue;
 import org.apache.drill.exec.proto.UserProtos;
 
 import java.io.InputStream;
 import java.io.Reader;
-import java.sql.NClob;
-import java.sql.RowId;
-import java.sql.SQLException;
-import java.sql.SQLXML;
+import java.sql.*;
+import java.util.List;
 
 /**
  * @author Oleg Zinoviev
@@ -44,6 +43,11 @@ public class EnhancedDrill41PreparedStatement extends DrillPreparedStatementImpl
                                      int resultSetHoldability) throws SQLException {
         super(connection, h, signature, protoPreparedStatement, resultSetType, resultSetConcurrency, resultSetHoldability);
         this.signature = signature;
+    }
+
+    @Override
+    public List<TypedValue> getParameterValues() {
+        return super.getParameterValues();
     }
 
     @Override

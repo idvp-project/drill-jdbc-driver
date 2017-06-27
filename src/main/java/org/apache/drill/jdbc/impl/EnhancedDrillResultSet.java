@@ -32,11 +32,11 @@ import java.util.TimeZone;
  * @since 26.06.2017.
  */
 class EnhancedDrillResultSet extends DrillResultSetImpl {
-    private final DrillConnectionImpl connection;
+    private final EnhancedDrillConnectionImpl connection;
 
     EnhancedDrillResultSet(AvaticaStatement statement, Meta.Signature signature, ResultSetMetaData resultSetMetaData, TimeZone timeZone, Meta.Frame firstFrame) {
         super(statement, signature, resultSetMetaData, timeZone, firstFrame);
-        this.connection = (DrillConnectionImpl) statement.connection;
+        this.connection = (EnhancedDrillConnectionImpl) statement.connection;
     }
 
     @Override

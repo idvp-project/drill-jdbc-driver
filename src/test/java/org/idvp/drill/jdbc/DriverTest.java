@@ -17,10 +17,12 @@
  */
 package org.idvp.drill.jdbc;
 
+import com.google.common.base.Stopwatch;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import java.sql.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Oleg Zinoviev
@@ -40,6 +42,46 @@ public class DriverTest {
                     }
                 }
             }
+        }
+    }
+
+    @Test
+    @Ignore
+    public void test2() throws SQLException {
+
+        long first, second, third;
+        DriverManager.registerDriver(new Driver());
+        try (Connection connection = DriverManager.getConnection("jdbc:idvp:drill:drillbit=localhost:31010")) {
+            Stopwatch stopwatch = Stopwatch.createStarted();
+            try (PreparedStatement statement = connection.prepareStatement("select flatten(selector_CSS(content, '.text')) from regions.`http://bash.im/${path}` where path = ?")) {
+                statement.setString(1, "best");
+                try (ResultSet rs = statement.executeQuery()) {
+                    while (rs.next()) {
+                        System.out.println(rs.getString(1));
+                    }
+                }
+            }
+            first = stopwatch.elapsed(TimeUnit.MILLISECONDS);
+            stopwatch.reset().start();
+            try (PreparedStatement statement = connection.prepareStatement("select flatten(selector_CSS(content, '.text')) from regions.`http://bash.im/${path}` where path = ?")) {
+                statement.setString(1, "abysstop");
+                try (ResultSet rs = statement.executeQuery()) {
+                    while (rs.next()) {
+                        System.out.println(rs.getString(1));
+                    }
+                }
+            }
+            second = stopwatch.elapsed(TimeUnit.MILLISECONDS);
+
+            stopwatch.reset().start();
+            try (PreparedStatement statement = connection.prepareStatement("select flatten(selector_CSS(content, '.text')) from regions.`http://bash.im/${path}` where path = 'abyssbest'")) {
+                try (ResultSet rs = statement.executeQuery()) {
+                    while (rs.next()) {
+                        System.out.println(rs.getString(1));
+                    }
+                }
+            }
+            third = stopwatch.elapsed(TimeUnit.MILLISECONDS);
         }
     }
 }
