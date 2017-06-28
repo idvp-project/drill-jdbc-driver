@@ -11,12 +11,12 @@ import java.sql.Connection;
 @SuppressWarnings("unused")
 public class NoOpPlanCache implements PlanCache {
     @Override
-    public Meta.Signature getPlan(Connection connection, String query) {
+    public String getPlan(String url, String query) {
         return null;
     }
 
     @Override
-    public void storePlan(Connection connection, String query, Meta.Signature signature) {
+    public void storePlan(String url, String query, String plan) {
     }
 
 }

@@ -13,19 +13,26 @@ import java.util.concurrent.ConcurrentMap;
 @SuppressWarnings("unused")
 public class ConcurrentMapPlanCache implements PlanCache {
 
-    private final static ConcurrentMap<Connection, ConcurrentMap<String, Meta.Signature>> cache = new ConcurrentHashMap<>();
+    private final static ConcurrentMap<String, String> cache = new ConcurrentHashMap<>();
 
     @Override
-    public Meta.Signature getPlan(Connection connection, String query) {
-        return cache
-                .computeIfAbsent(connection, c -> new ConcurrentHashMap<>())
-                .get(query);
+    public String getPlan(String url, String query) {
+        //noinspection StringBufferReplaceableByString
+        return cache.get(new StringBuilder()
+            .append(url)
+            .append(":")
+            .append(query)
+            .toString());
+
     }
 
     @Override
-    public void storePlan(Connection connection, String query, Meta.Signature signature) {
-        cache
-                .computeIfAbsent(connection, c -> new ConcurrentHashMap<>())
-                .put(query, signature);
+    public void storePlan(String url, String query, String plan) {
+        //noinspection StringBufferReplaceableByString
+        cache.put(new StringBuilder()
+                .append(url)
+                .append(":")
+                .append(query)
+                .toString(), plan);
     }
 }

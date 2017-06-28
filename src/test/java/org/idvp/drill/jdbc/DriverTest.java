@@ -50,9 +50,10 @@ public class DriverTest {
     public void test2() throws SQLException {
 
         long first, second, third;
+        int max = 10;
         DriverManager.registerDriver(new Driver());
+        Stopwatch stopwatch = Stopwatch.createUnstarted();
         try (Connection connection = DriverManager.getConnection("jdbc:idvp:drill:drillbit=localhost:31010")) {
-            Stopwatch stopwatch = Stopwatch.createStarted();
             try (PreparedStatement statement = connection.prepareStatement("select flatten(selector_CSS(content, '.text')) from regions.`http://bash.im/${path}` where path = ?")) {
                 statement.setString(1, "best");
                 try (ResultSet rs = statement.executeQuery()) {
@@ -61,23 +62,47 @@ public class DriverTest {
                     }
                 }
             }
+            stopwatch.start();
+            for (int i = 0; i < max; i++) {
+                try (PreparedStatement statement = connection.prepareStatement("select flatten(selector_CSS(content, '.text')) from regions.`http://bash.im/${path}` where path = ?")) {
+                    statement.setString(1, "abysstop");
+                    try (ResultSet rs = statement.executeQuery()) {
+                        while (rs.next()) {
+                            System.out.println(rs.getString(1));
+                        }
+                    }
+                }
+            }
             first = stopwatch.elapsed(TimeUnit.MILLISECONDS);
-            stopwatch.reset().start();
-            try (PreparedStatement statement = connection.prepareStatement("select flatten(selector_CSS(content, '.text')) from regions.`http://bash.im/${path}` where path = ?")) {
-                statement.setString(1, "abysstop");
+        }
+
+        try(Connection connection = DriverManager.getConnection("jdbc:drill:drillbit=localhost:31010")) {
+            try (PreparedStatement statement = connection.prepareStatement("select flatten(selector_CSS(content, '.text')) from regions.`http://bash.im/${path}` where path = 'best'")) {
                 try (ResultSet rs = statement.executeQuery()) {
                     while (rs.next()) {
                         System.out.println(rs.getString(1));
                     }
                 }
             }
-            second = stopwatch.elapsed(TimeUnit.MILLISECONDS);
 
             stopwatch.reset().start();
-            try (PreparedStatement statement = connection.prepareStatement("select flatten(selector_CSS(content, '.text')) from regions.`http://bash.im/${path}` where path = 'abyssbest'")) {
-                try (ResultSet rs = statement.executeQuery()) {
-                    while (rs.next()) {
-                        System.out.println(rs.getString(1));
+            for (int i = 0; i < max; i++) {
+                try (PreparedStatement statement = connection.prepareStatement("select flatten(selector_CSS(content, '.text')) from regions.`http://bash.im/${path}` where path = 'abysstop'")) {
+                    try (ResultSet rs = statement.executeQuery()) {
+                        while (rs.next()) {
+                            System.out.println(rs.getString(1));
+                        }
+                    }
+                }
+            }
+            second = stopwatch.elapsed(TimeUnit.MILLISECONDS);
+            stopwatch.reset().start();
+            for (int i = 0; i < max; i++) {
+                try (Statement statement = connection.createStatement()) {
+                    try (ResultSet rs = statement.executeQuery("select flatten(selector_CSS(content, '.text')) from regions.`http://bash.im/${path}` where path = 'abysstop'")) {
+                        while (rs.next()) {
+                            System.out.println(rs.getString(1));
+                        }
                     }
                 }
             }

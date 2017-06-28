@@ -15,12 +15,14 @@ import java.util.Properties;
 class EnhancedDrillConnectionImpl extends DrillConnectionImpl {
     private PlanCache cache;
     private Integration integration;
+    final String url;
 
     EnhancedDrillConnectionImpl(DriverImpl driver,
                                 AvaticaFactory factory,
                                 String url,
                                 Properties info) throws SQLException {
         super(driver, factory, url, info);
+        this.url = url;
         createPlanCache();
     }
 

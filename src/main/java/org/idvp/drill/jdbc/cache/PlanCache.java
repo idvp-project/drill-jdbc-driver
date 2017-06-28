@@ -10,6 +10,6 @@ import java.sql.Connection;
  * @since 27.06.2017.
  */
 public interface PlanCache {
-    Meta.Signature getPlan(Connection connection, String query);
-    void storePlan(Connection connection, String query, Meta.Signature signature);
+    String getPlan(String url, String query);
+    void storePlan(String url, String query, String plan);
 }

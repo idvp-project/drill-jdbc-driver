@@ -19,10 +19,6 @@ class EnhancedDrillConnectionConfig extends DrillConnectionConfig {
         return "true".equalsIgnoreCase(properties.getProperty(Constants.PLANNING_ENABLED, "true"));
     }
 
-    boolean enabledWithoutParameters() {
-        return "true".equalsIgnoreCase(properties.getProperty(Constants.WITHOUT_PARAMETER_PLANNING_ENABLED, "false"));
-    }
-
     String getCacheClassName() {
         return properties.getProperty(Constants.PLAN_CACHE_IMPL, ConcurrentMapPlanCache.class.getName());
     }

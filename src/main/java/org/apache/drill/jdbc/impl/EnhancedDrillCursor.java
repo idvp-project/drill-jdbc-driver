@@ -71,38 +71,28 @@ class EnhancedDrillCursor extends DrillCursor {
 
             DrillCursor.ResultsListener resultsListener = this.proxy.getResultsListener();
 
+            String effectiveSql = signature.sql;
+            if (statement instanceof EnhancedDrill41PreparedStatement) {
+                EnhancedDrill41PreparedStatement preparedStatement = (EnhancedDrill41PreparedStatement) statement;
+                for (TypedValue value : preparedStatement.getParameterValues()) {
+                    Object p = value.toJdbc(Calendar.getInstance());
+                    if (p instanceof String) {
+                        p = "'" + StringEscapeUtils.escapeSql((String) p) + "'";
+                    }
+                    effectiveSql = effectiveSql.replaceFirst("\\?", Objects.toString(p));
+                }
+            }
+
             PlanHandler.PlanHandlerResult result = null;
             if (signature instanceof SelectSignature) {
-                PlanHandler handler = new PlanHandler(connection, signature);
+                PlanHandler handler = new PlanHandler(connection, effectiveSql);
                 handler.handle();
                 result = handler.getResult();
             }
 
-            if (result != null && result.queryType == UserBitShared.QueryType.PHYSICAL) {
-                String effectivePlan = result.signature.sql;
-                if (statement instanceof EnhancedDrill41PreparedStatement) {
-                    EnhancedDrill41PreparedStatement preparedStatement = (EnhancedDrill41PreparedStatement) statement;
-                    int index = 0;
-                    for (TypedValue value : preparedStatement.getParameterValues()) {
-                        effectivePlan = effectivePlan.replaceFirst("\\?" + index++, Objects.toString(value.value));
-                    }
-                }
-                connection.getClient().runQuery(UserBitShared.QueryType.PHYSICAL, effectivePlan, resultsListener);
-
+            if (result != null) {
+                connection.getClient().runQuery(result.queryType, result.plan, resultsListener);
             } else {
-
-                String effectiveSql = signature.sql;
-                if (statement instanceof EnhancedDrill41PreparedStatement) {
-                    EnhancedDrill41PreparedStatement preparedStatement = (EnhancedDrill41PreparedStatement) statement;
-                    for (TypedValue value : preparedStatement.getParameterValues()) {
-                        Object p = value.toJdbc(Calendar.getInstance());
-                        if (p instanceof String) {
-                            p = "'" + StringEscapeUtils.escapeSql((String) p) + "'";
-                        }
-
-                        effectiveSql = effectiveSql.replaceFirst("\\?", Objects.toString(p));
-                    }
-                }
                 connection.getClient().runQuery(UserBitShared.QueryType.SQL, effectiveSql, resultsListener);
             }
 

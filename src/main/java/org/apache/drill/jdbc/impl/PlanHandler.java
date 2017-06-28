@@ -1,8 +1,5 @@
 package org.apache.drill.jdbc.impl;
 
-import org.apache.calcite.avatica.AvaticaParameter;
-import org.apache.calcite.avatica.Meta;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.rpc.RpcException;
@@ -16,17 +13,15 @@ import java.sql.Statement;
  * @since 27.06.2017.
  */
 class PlanHandler {
-    private final EnhancedDriverImpl driver;
     private final EnhancedDrillConnectionImpl connection;
-    private final Meta.Signature signature;
+    private final String sql;
     private PlanHandlerResult result;
 
     PlanHandler(EnhancedDrillConnectionImpl connection,
-                Meta.Signature signature) {
+                String sql) {
 
-        this.driver = (EnhancedDriverImpl) connection.getDriver();
         this.connection = connection;
-        this.signature = signature;
+        this.sql = sql;
     }
 
 
@@ -34,28 +29,18 @@ class PlanHandler {
         try {
 
             EnhancedDrillConnectionConfig config = connection.getEnhancedConfig();
-            if (!config.enabled()) {
-                result = new PlanHandlerResult(UserBitShared.QueryType.SQL, signature);
-                return;
-            }
-            if (!config.enabledWithoutParameters() && CollectionUtils.isEmpty(signature.parameters)) {
-                result = new PlanHandlerResult(UserBitShared.QueryType.SQL, signature);
-                return;
-            }
-
-            Meta.Signature planSignature = connection.getCache().getPlan(connection, signature.sql);
-            if (planSignature == null) {
-                planSignature = createPlan(signature);
-                if (planSignature != null) {
-                    connection.getCache().storePlan(connection, signature.sql, planSignature);
-                    result = new PlanHandlerResult(UserBitShared.QueryType.PHYSICAL, planSignature);
+            if (config.enabled()) {
+                String plan = connection.getCache().getPlan(connection.url, sql);
+                if (plan == null) {
+                    plan = createPlan(sql);
+                    connection.getCache().storePlan(connection.url, sql, plan);
+                }
+                if (plan != null) {
+                    result = new PlanHandlerResult(UserBitShared.QueryType.PHYSICAL, plan);
                     return;
                 }
-            } else {
-                result = new PlanHandlerResult(UserBitShared.QueryType.PHYSICAL, planSignature);
-                return;
             }
-            result = new PlanHandlerResult(UserBitShared.QueryType.SQL, signature);
+            result = new PlanHandlerResult(UserBitShared.QueryType.SQL, sql);
         } catch (SQLException e) {
             throw e;
         } catch (Exception e) {
@@ -63,23 +48,12 @@ class PlanHandler {
         }
     }
 
-    private Meta.Signature createPlan(Meta.Signature signature) throws RpcException, SchemaChangeException, SQLException {
-        String sql = "explain plan for " + signature.sql;
-        for (AvaticaParameter parameter : signature.parameters) {
-            sql = sql.replaceFirst("\\?", "'" + parameter.name + "'");
-        }
-
+    private String createPlan(String sql) throws RpcException, SchemaChangeException, SQLException {
+        sql = "explain plan for " + sql;
         try (Statement statement = connection.createStatement()) {
             try (ResultSet rs = statement.executeQuery(sql)) {
                 if (rs.next()) {
-                    String plan = rs.getString(2);
-                    return new Meta.Signature(
-                            signature.columns,
-                            plan,
-                            signature.parameters,
-                            signature.internalParameters,
-                            signature.cursorFactory
-                    );
+                    return rs.getString(2);
                 }
                 return null;
             }
@@ -95,12 +69,12 @@ class PlanHandler {
 
     static class PlanHandlerResult {
         final UserBitShared.QueryType queryType;
-        final Meta.Signature signature;
+        final String plan;
 
         private PlanHandlerResult(UserBitShared.QueryType queryType,
-                                  Meta.Signature signature) {
+                                  String plan) {
             this.queryType = queryType;
-            this.signature = signature;
+            this.plan = plan;
         }
     }
 
