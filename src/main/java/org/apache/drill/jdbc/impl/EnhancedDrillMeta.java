@@ -1,17 +1,17 @@
 package org.apache.drill.jdbc.impl;
 
 import org.apache.calcite.avatica.AvaticaParameter;
-import org.apache.calcite.avatica.Meta;
 import org.apache.calcite.sql.SqlDynamicParam;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.util.SqlBasicVisitor;
-import org.apache.drill.exec.planner.sql.DrillParserConfig;
 import org.apache.drill.jdbc.impl.avatica.SelectSignature;
 
 import java.sql.JDBCType;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author Oleg Zinoviev
@@ -61,7 +61,7 @@ public class EnhancedDrillMeta extends DrillMetaImpl {
             return new SelectSignature(new DrillColumnMetaDataList(), sql, parameters, Collections.emptyMap(), null);
 
         } catch (SqlParseException e) {
-            throw new RuntimeException(e);
+            return new Signature(new DrillColumnMetaDataList(), sql, Collections.emptyList(), Collections.emptyMap(), null);
         }
     }
 }
